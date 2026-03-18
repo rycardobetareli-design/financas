@@ -574,6 +574,99 @@
     }
   }
 
+
+  /* ══ SCROLL & OVERFLOW FIXES ══════════════════════════════ */
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    overscroll-behavior-x: none !important;
+  }
+  /* Esconder TODAS as scrollbars */
+  * {
+    scrollbar-width: none !important;       /* Firefox */
+    -ms-overflow-style: none !important;    /* IE/Edge */
+  }
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  /* Impedir scroll horizontal em qualquer elemento */
+  .main, .card, .summary-card, .content-grid,
+  .content-grid-3, .summary-grid, #page-dashboard,
+  #page-transacoes, #page-relatorios, #page-metas,
+  #page-gastosfixos, #page-categorias, #page-notas {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+  }
+  /* Tab rows: scroll horizontal interno ok, mas sem barra */
+  .tab-row {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+  /* Sidebar não vaza horizontalmente */
+  .sidebar {
+    overflow-x: hidden !important;
+  }
+  /* Grids não vazam */
+  .summary-grid > *, .content-grid > *, .content-grid-3 > * {
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+  /* Charts: contidos */
+  .chart-wrap, #barChart, #histChart, #lineChart,
+  #donutChart, #repDonut, #fixoHistChart {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  /* ══ RELATÓRIOS — fix gráfico mobile ══════════════════════ */
+  @media(max-width: 768px) {
+    /* Barra de receita vs despesa */
+    #page-relatorios .card { overflow: visible !important; }
+    #barChart { 
+      height: 200px !important;
+      max-height: 200px !important;
+    }
+    /* Esconder datalabels no mobile (causam overflow) */
+    #page-relatorios div[style*="height:240px"] {
+      height: 200px !important;
+    }
+    /* Donut no relatório — empilhar verticalmente */
+    #page-relatorios .donut-wrap {
+      flex-direction: column !important;
+      align-items: center !important;
+    }
+    #repDonut {
+      width: 130px !important;
+      height: 130px !important;
+    }
+    /* Grid de relatórios — coluna única */
+    #page-relatorios div[style*="grid-template-columns:1fr 340px"] {
+      grid-template-columns: 1fr !important;
+    }
+    #page-relatorios .content-grid {
+      grid-template-columns: 1fr !important;
+    }
+    /* Selects no cabeçalho do gráfico de barras */
+    #page-relatorios .card-header {
+      flex-wrap: wrap !important;
+      gap: 8px !important;
+    }
+    #barChartMode, #barChartYear, #barChartMonth {
+      font-size: 11px !important;
+      padding: 4px 8px !important;
+    }
+    /* Saldo acumulado */
+    #histChart {
+      height: 160px !important;
+    }
+    /* Summary grid no relatório */
+    #page-relatorios .summary-grid {
+      grid-template-columns: 1fr 1fr !important;
+    }
+  }
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -2359,6 +2452,89 @@ window.addEventListener('resize', function() {
     if(barInst)        { try { barInst.resize();        } catch(e){} }
     if(histInst)       { try { histInst.resize();       } catch(e){} }
   }, 200);
+});
+
+
+// ═══════════════════════════════════════════════════════
+// PERFORMANCE — Anti-lag no mobile
+// ═══════════════════════════════════════════════════════
+
+// Debounce helper
+function _debounce(fn, ms) {
+  var t;
+  return function() {
+    var args = arguments;
+    clearTimeout(t);
+    t = setTimeout(function(){ fn.apply(null, args); }, ms);
+  };
+}
+
+// Usar requestAnimationFrame para renders pesados
+function _raf(fn) {
+  if(window.requestAnimationFrame) requestAnimationFrame(fn);
+  else fn();
+}
+
+// Patch renderDashTx para usar rAF
+var _origRenderDashTx = typeof renderDashTx === 'function' ? renderDashTx : null;
+if(_origRenderDashTx) {
+  renderDashTx = function() {
+    _raf(_origRenderDashTx);
+  };
+}
+
+// Patch renderFullTx para usar rAF
+var _origRenderFullTx = typeof renderFullTx === 'function' ? renderFullTx : null;
+if(_origRenderFullTx) {
+  renderFullTx = function() {
+    _raf(_origRenderFullTx);
+  };
+}
+
+// Prevenir scroll horizontal via touch
+document.addEventListener('touchmove', function(e) {
+  // Só bloquear se o movimento for predominantemente horizontal
+  // e não estiver num elemento com scroll horizontal permitido
+  var el = e.target;
+  var allowHScroll = false;
+  while(el && el !== document.body) {
+    if(el.classList && (el.classList.contains('tab-row') || 
+       el.classList.contains('emoji-grid') ||
+       el.classList.contains('goal-emoji-grid') ||
+       el.id === 'fixoEmojiGrid' ||
+       el.classList.contains('import-preview-table'))) {
+      allowHScroll = true;
+      break;
+    }
+    el = el.parentElement;
+  }
+  if(!allowHScroll && e.touches.length === 1) {
+    var touch = e.touches[0];
+    var dx = Math.abs(touch.clientX - (_touchStartX || touch.clientX));
+    var dy = Math.abs(touch.clientY - (_touchStartY || touch.clientY));
+    if(dx > dy && dx > 10) {
+      e.preventDefault();
+    }
+  }
+}, { passive: false });
+
+var _touchStartX = 0, _touchStartY = 0;
+document.addEventListener('touchstart', function(e) {
+  if(e.touches.length === 1) {
+    _touchStartX = e.touches[0].clientX;
+    _touchStartY = e.touches[0].clientY;
+  }
+}, { passive: true });
+
+// Chart.js global config para mobile — desativar animações pesadas
+document.addEventListener('DOMContentLoaded', function() {
+  if(typeof Chart !== 'undefined' && window.innerWidth <= 768) {
+    Chart.defaults.animation = false;
+    Chart.defaults.animations = false;
+    Chart.defaults.transitions = {};
+    Chart.defaults.responsive  = true;
+    Chart.defaults.maintainAspectRatio = false;
+  }
 });
 
 </script>
