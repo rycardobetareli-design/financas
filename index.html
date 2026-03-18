@@ -498,6 +498,82 @@
   .sb-logout:hover { background: var(--red-dim); color: var(--red); }
   @media(max-width:420px) { .user-grid { gap: 8px; } }
 
+
+  /* ══ APP NATIVO — sem highlight, sem seleção, sem outline ══ */
+  *, *::before, *::after {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    outline: none !important;
+  }
+  /* Permitir seleção apenas em inputs e textareas */
+  input, textarea, [contenteditable] {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: default !important;
+  }
+  /* Tudo mais: sem seleção */
+  body, button, div, span, p, h1, h2, h3, h4, nav, aside,
+  .nav-item, .btn, .tab, .tx-item, .summary-card, .card,
+  .ucl, .goal-card, .fixo-item, .mobile-nav-item {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+  }
+  /* Botões — remover todos os estados de focus visíveis */
+  button:focus, button:focus-visible,
+  a:focus, a:focus-visible,
+  div[onclick]:focus, div[onclick]:focus-visible,
+  [tabindex]:focus, [tabindex]:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: inherit !important;
+  }
+  /* Inputs mantém outline de foco (acessibilidade) */
+  input:focus, textarea:focus, select:focus {
+    outline: none !important;
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 0 2px rgba(201,168,76,0.15) !important;
+  }
+  /* Touch action — scroll suave, sem zoom acidental */
+  html { touch-action: manipulation; }
+  button, [onclick], .nav-item, .tab, .btn,
+  .ucl, .tx-item, .mobile-nav-item {
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+  /* Overflow scrolling nativo no iOS */
+  .main, .modal, .tx-list, .inst-preview-list,
+  .emoji-grid, .goal-emoji-grid, #fixoEmojiGrid {
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Prevenir zoom em inputs no iOS (precisa de font-size >= 16px) */
+  @media(max-width:768px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+    .login-pwd-inp {
+      font-size: 22px !important;
+    }
+  }
+  /* Remover estilos de foco em botões inline (nos onclick inline) */
+  .emoji-btn:focus, .goal-emoji-btn:focus,
+  .ucl:focus, .nav-item:focus, .mobile-nav-item:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  /* Scroll da sidebar no mobile */
+  .sidebar { -webkit-overflow-scrolling: touch; }
+  /* Overscroll bounce apenas no scroll principal */
+  .main { overscroll-behavior-y: contain; }
+  /* Status bar area no iOS */
+  @supports(padding-top: env(safe-area-inset-top)) {
+    #loginScreen {
+      padding-top: env(safe-area-inset-top);
+    }
+    .main {
+      padding-top: max(12px, env(safe-area-inset-top)) !important;
+    }
+  }
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -2232,6 +2308,58 @@ function disconnectSync(){
   closeSyncModal();
   showToast('Sincronizacao desconectada.');
 }
+
+
+// ═══════════════════════════════════════════════════════
+// PERFORMANCE — App nativo: sem travamento
+// ═══════════════════════════════════════════════════════
+
+// Prevenir menu de contexto em toda a interface (exceto inputs)
+document.addEventListener('contextmenu', function(e) {
+  if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    e.preventDefault();
+  }
+});
+
+// Prevenir seleção de texto ao dar double tap
+document.addEventListener('selectstart', function(e) {
+  if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    e.preventDefault();
+  }
+});
+
+// Prevenir zoom com double tap (iOS)
+var _lastTap = 0;
+document.addEventListener('touchend', function(e) {
+  if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  var now = Date.now();
+  if(now - _lastTap < 300) e.preventDefault();
+  _lastTap = now;
+}, { passive: false });
+
+// Lazy chart init — só renderiza charts quando a aba estiver visível
+var _chartsReady = false;
+var _origInitLineChart  = null;
+var _origInitDonutChart = null;
+
+function _lazyInitCharts() {
+  if(_chartsReady) return;
+  _chartsReady = true;
+  try { initLineChart(currentRange); } catch(e){}
+  try { initDonutChart(); } catch(e){}
+}
+
+// Throttle de resize para não travar
+var _resizeTimer;
+window.addEventListener('resize', function() {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(function() {
+    if(lineChartInst)  { try { lineChartInst.resize();  } catch(e){} }
+    if(donutChartInst) { try { donutChartInst.resize(); } catch(e){} }
+    if(barInst)        { try { barInst.resize();        } catch(e){} }
+    if(histInst)       { try { histInst.resize();       } catch(e){} }
+  }, 200);
+});
 
 </script>
 
