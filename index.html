@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Flux</title>
+<title>Fluxy</title>
 <meta name="theme-color" content="#080B0F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Flux">
+<meta name="apple-mobile-web-app-title" content="Fluxy">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="application-name" content="Flux">
+<meta name="application-name" content="Fluxy">
 <meta name="description" content="Controle suas finanças pessoais">
 <link rel="manifest" id="pwaManifest">
 <link rel="apple-touch-icon" id="appleTouchIcon">
@@ -25,7 +25,7 @@
     --blue-dim: rgba(91,143,232,0.12); --r: 14px; --shadow: 0 8px 40px rgba(0,0,0,0.4);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: clip; }
+  body { font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
   body::before { content:''; position:fixed; inset:0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:9999; opacity:0.4; }
   body::after { content:''; position:fixed; top:-30vh; left:50%; transform:translateX(-50%); width:80vw; height:60vh; background: radial-gradient(ellipse, rgba(201,168,76,0.05) 0%, transparent 70%); pointer-events:none; z-index:0; }
   .sidebar { position:fixed; left:0; top:0; bottom:0; width:240px; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:100; padding:0; }
@@ -575,37 +575,7 @@
   }
 
 
-  /* ══ SCROLL & OVERFLOW FIXES ══════════════════════════════ */
-  /* REGRA DE OURO: nunca setar overflow no html — quebra scroll no iOS */
-  html {
-    max-width: 100vw;
-  }
-  /* Body: só clip horizontal, scroll vertical livre */
-  body {
-    overflow-x: clip;
-    overscroll-behavior-x: none;
-    max-width: 100vw;
-  }
-  /* Main: scroll vertical nativo */
-  .main {
-    max-width: 100%;
-    -webkit-overflow-scrolling: touch;
-  }
-  /* Esconder barras de scroll visualmente sem bloquear scroll */
-  ::-webkit-scrollbar { width:0; height:0; background:transparent; }
-  * { scrollbar-width: none; }
-  /* Tab rows: scroll horizontal interno */
-  .tab-row {
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-  /* Sidebar: scroll vertical interno */
-  .sidebar { overflow-x: hidden; overflow-y: auto; }
-  /* Grids e cards: não vazam horizontalmente */
-  .summary-grid > *, .content-grid > *, .content-grid-3 > *,
-  .card, .summary-card { min-width: 0; max-width: 100%; }
-  /* Charts contidos */
-  .chart-wrap { max-width: 100%; overflow: hidden; }
+  /* scroll: CSS-only via body overflow-x */
 
   /* ══ RELATÓRIOS — fix gráfico mobile ══════════════════════ */
   @media(max-width: 768px) {
@@ -664,7 +634,7 @@
   <div class="login-glow"></div>
   <div class="login-wrap">
     <div class="login-logo">
-      <div class="login-logo-mark">FLUX</div>
+      <div class="login-logo-mark">FLUXY</div>
       <div class="login-logo-sub">Finanças Pessoais</div>
     </div>
     <div class="login-title">Bem-vindo de volta</div>
@@ -1791,7 +1761,7 @@ function renderFixoEmojiGrid(){const tabs=document.getElementById('fixoEmojiTabs
 // ===================== BACKUP =====================
 function openBackupModal(){const info=document.getElementById('backupInfo');if(info){const ts=localStorage.getItem(uk('fluxo_last_backup'));const lastStr=ts?'Último backup: '+new Date(parseInt(ts)).toLocaleString('pt-BR'):'Nenhum backup realizado ainda.';info.innerHTML=`${transactions.length} transações · ${investments.length} investimentos · ${goals.length} metas<br><span style="color:var(--text-3)">${lastStr}</span>`;}document.getElementById('backupOverlay').classList.add('open');}
 function closeBackupModal(){document.getElementById('backupOverlay').classList.remove('open');}
-function exportFullBackup(){const data={_version:2,_exportedAt:new Date().toISOString(),_appName:'Flux',transactions,investments,goals,budgets,customCategories,notes:notesData};const json=JSON.stringify(data,null,2);const blob=new Blob([json],{type:'application/json;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);const d=new Date();a.download=`fluxo_backup_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.json`;a.click();localStorage.setItem(uk('fluxo_last_backup'),Date.now().toString());showToast('✅ Backup exportado com sucesso!');const info=document.getElementById('backupInfo');if(info)info.innerHTML='Backup realizado agora · '+transactions.length+' transações salvas';}
+function exportFullBackup(){const data={_version:2,_exportedAt:new Date().toISOString(),_appName:'Fluxy',transactions,investments,goals,budgets,customCategories,notes:notesData};const json=JSON.stringify(data,null,2);const blob=new Blob([json],{type:'application/json;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);const d=new Date();a.download=`fluxo_backup_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.json`;a.click();localStorage.setItem(uk('fluxo_last_backup'),Date.now().toString());showToast('✅ Backup exportado com sucesso!');const info=document.getElementById('backupInfo');if(info)info.innerHTML='Backup realizado agora · '+transactions.length+' transações salvas';}
 function importFullBackup(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{try{const data=JSON.parse(e.target.result);if(!data._appName||!Array.isArray(data.transactions))throw new Error('Arquivo inválido');if(!confirm(`Restaurar backup de ${new Date(data._exportedAt).toLocaleString('pt-BR')}?\n\n${data.transactions.length} transações · ${(data.investments||[]).length} investimentos\n\nOs dados atuais serão SUBSTITUÍDOS.`))return;transactions=data.transactions||[];investments=data.investments||[];goals=data.goals||[];budgets=data.budgets||[];customCategories=data.customCategories||[];if(data.notes)notesData=data.notes;saveData();saveNotes();renderDashTx();renderFullTx();updateBadge();updateDashboardSummary();populateTxYearFilter();event.target.value='';closeBackupModal();showToast('✅ Backup restaurado! '+transactions.length+' transações carregadas.');}catch(err){showToast('❌ Arquivo inválido ou corrompido.',true);}};reader.readAsText(file,'UTF-8');}
 
 // ===================== MOBILE =====================
@@ -1975,7 +1945,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ═══════════════════════════════════════════════════════
 
 // ── SVG Icon (gold "F" on dark bg) ──────────────────────
-var _iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="80" fill="#080B0F"/><rect width="512" height="512" rx="80" fill="url(#g)"/><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1a2030"/><stop offset="100%" stop-color="#0a0e14"/></linearGradient></defs><text x="256" y="360" font-family="Arial Black,Arial" font-weight="900" font-size="280" fill="#C9A84C" text-anchor="middle">F</text><text x="256" y="460" font-family="Arial,sans-serif" font-weight="600" font-size="72" fill="#C9A84C" text-anchor="middle" opacity="0.8">FLUX</text></svg>';
+var _iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="80" fill="#080B0F"/><rect width="512" height="512" rx="80" fill="url(#g)"/><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1a2030"/><stop offset="100%" stop-color="#0a0e14"/></linearGradient></defs><text x="256" y="360" font-family="Arial Black,Arial" font-weight="900" font-size="280" fill="#C9A84C" text-anchor="middle">F</text><text x="256" y="460" font-family="Arial,sans-serif" font-weight="600" font-size="72" fill="#C9A84C" text-anchor="middle" opacity="0.8">FLUXY</text></svg>';
 
 function _svgToDataUrl(svg) {
   return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
@@ -1985,8 +1955,8 @@ function _svgToDataUrl(svg) {
 function _injectManifest() {
   var iconUrl = _svgToDataUrl(_iconSvg);
   var manifest = {
-    name: 'Flux',
-    short_name: 'Flux',
+    name: 'Fluxy',
+    short_name: 'Fluxy',
     description: 'Controle suas finanças pessoais',
     start_url: './',
     display: 'standalone',
@@ -2478,31 +2448,7 @@ if(_origRenderFullTx) {
   };
 }
 
-// Bloquear scroll horizontal da PÁGINA inteira (não de elementos internos)
-// Usando abordagem de wrapper — mais compatível com iOS
-document.addEventListener('touchmove', function(e) {
-  // Nunca bloquear scroll dentro de elementos scrolláveis
-  var el = e.target;
-  while(el && el !== document.body) {
-    if(el.scrollWidth > el.clientWidth + 2) return; // tem scroll h interno
-    el = el.parentElement;
-  }
-  // Só bloquear se for movimento predominantemente horizontal
-  if(e.touches.length !== 1) return;
-  var dx = Math.abs(e.touches[0].clientX - _touchStartX);
-  var dy = Math.abs(e.touches[0].clientY - _touchStartY);
-  if(dx > 8 && dx > dy * 1.5) {
-    e.preventDefault();
-  }
-}, { passive: false });
-
 var _touchStartX = 0, _touchStartY = 0;
-document.addEventListener('touchstart', function(e) {
-  if(e.touches.length === 1) {
-    _touchStartX = e.touches[0].clientX;
-    _touchStartY = e.touches[0].clientY;
-  }
-}, { passive: true });
 
 // Chart.js global config para mobile — desativar animações pesadas
 document.addEventListener('DOMContentLoaded', function() {
@@ -2604,4 +2550,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 </body>
-</html> 
+</html>
