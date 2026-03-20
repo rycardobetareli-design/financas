@@ -624,6 +624,29 @@
     }
   }
 
+
+  /* ══ SCROLL PERFORMANCE ═══════════════════════════════════ */
+  @media (max-width: 768px) {
+    /* backdrop-filter é a principal causa de scroll lag */
+    .card, .summary-card, .modal, .mobile-nav, .sidebar {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    /* GPU compositing para scroll suave */
+    .main {
+      will-change: scroll-position;
+      transform: translateZ(0);
+    }
+    /* Animações desligadas no mobile */
+    .card, .summary-card {
+      animation: none !important;
+      transition: none !important;
+    }
+    .summary-card:hover, .card:hover {
+      transform: none !important;
+    }
+  }
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -1530,7 +1553,45 @@ function initBarChart(){
   else if(mode==='allyears'){const allYears=[...new Set(transactions.map(t=>t.date?t.date.slice(0,4):null).filter(Boolean))].sort();labels=allYears;incomeData=allYears.map(y=>transactions.filter(t=>t.type==='income'&&t.date&&t.date.slice(0,4)===y).reduce((s,t)=>s+t.value,0));expenseData=allYears.map(y=>transactions.filter(t=>t.type==='expense'&&t.date&&t.date.slice(0,4)===y).reduce((s,t)=>s+t.value,0));}
   const ctx=canvas.getContext('2d');
   if(barInst)barInst.destroy();
-  barInst=new Chart(ctx,{type:'bar',plugins:[ChartDataLabels],data:{labels,datasets:[{label:'Receita',data:incomeData,backgroundColor:'rgba(76,175,130,0.75)',borderRadius:5},{label:'Despesa',data:expenseData,backgroundColor:'rgba(226,92,92,0.75)',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:44,left:4,right:4}},plugins:{legend:{display:true,labels:{color:'#8A8F96',font:{size:11},boxWidth:10,boxHeight:10}},tooltip:{enabled:false},datalabels:{anchor:'end',align:'end',color:ctx=>ctx.dataset.label==='Receita'?'#4CAF82':'#E25C5C',font:{size:10,weight:'bold'},formatter:v=>v===0?'':(v>=1000?'R$'+(v/1000).toFixed(1)+'k':'R$'+v.toFixed(0)),clip:false,offset:2}},scales:{x:{grid:{display:false},ticks:{color:'#4A5260',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#4A5260',font:{size:11},callback:v=>v>=1000?'R$'+(v/1000).toFixed(0)+'k':'R$'+v},beginAtZero:true}}}});
+  barInst=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Receita',data:incomeData,backgroundColor:'rgba(76,175,130,0.75)',borderRadius:5},
+      {label:'Despesa',data:expenseData,backgroundColor:'rgba(226,92,92,0.75)',borderRadius:5}
+    ]},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      layout:{padding:{top:8,left:4,right:4}},
+      plugins:{
+        legend:{display:true,labels:{color:'#8A8F96',font:{size:11},boxWidth:10,boxHeight:10}},
+        datalabels:{display:false},
+        tooltip:{
+          enabled:true,
+          backgroundColor:'#0E1318',
+          borderColor:'rgba(255,255,255,0.08)',
+          borderWidth:1,
+          titleColor:'#F0EDE6',
+          bodyColor:'#8A8F96',
+          padding:10,
+          cornerRadius:8,
+          callbacks:{label:function(c){return ' '+fmt(c.parsed.y);}}
+        }
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#4A5260',font:{size:window.innerWidth<=768?9:11},maxRotation:0}},
+        y:{
+          grid:{color:'rgba(255,255,255,0.04)'},
+          ticks:{
+            color:'#4A5260',
+            font:{size:window.innerWidth<=768?9:11},
+            callback:function(v){return v>=1000000?'R$'+(v/1000000).toFixed(1)+'M':v>=1000?'R$'+(v/1000).toFixed(0)+'k':'R$'+Math.round(v);}
+          },
+          beginAtZero:true
+        }
+      }
+    }
+  });
 }
 
 function initHistChart(){
@@ -2461,9 +2522,69 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+
+// ═══ MOBILE MORE MENU ════════════════════════════════════════
+function toggleMobileMore(btn) {
+  var menu    = document.getElementById('moreMenu');
+  var overlay = document.getElementById('moreMenuOverlay');
+  if(!menu) return;
+  var open = menu.style.display !== 'none';
+  if(open) {
+    menu.style.display    = 'none';
+    overlay.style.display = 'none';
+    btn.classList.remove('active');
+  } else {
+    menu.style.display    = '';
+    overlay.style.display = '';
+    btn.classList.add('active');
+  }
+}
+
+function closeMobileMore() {
+  var menu    = document.getElementById('moreMenu');
+  var overlay = document.getElementById('moreMenuOverlay');
+  var btn     = document.getElementById('mnav-mais');
+  if(menu)    menu.style.display    = 'none';
+  if(overlay) overlay.style.display = 'none';
+  if(btn)     btn.classList.remove('active');
+}
+
+function mnavGoMore(page) {
+  closeMobileMore();
+  showPage(page);
+  // Remove active from bottom nav items
+  var items = document.querySelectorAll('.mobile-nav-item');
+  for(var i=0;i<items.length;i++) items[i].classList.remove('active');
+  // Highlight "Mais" since page is a sub-page
+  var mais = document.getElementById('mnav-mais');
+  if(mais) mais.classList.add('active');
+}
+
 </script>
 
 <!-- Bottom Navigation Bar (mobile only) -->
+<!-- More menu overlay -->
+<div id="moreMenuOverlay" onclick="closeMobileMore()" style="display:none;position:fixed;inset:0;z-index:790;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px)"></div>
+<div id="moreMenu" style="display:none;position:fixed;bottom:65px;left:12px;right:12px;z-index:791;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:8px;box-shadow:0 -8px 40px rgba(0,0,0,0.5)">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+    <button onclick="mnavGoMore('metas')"    style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:none;background:var(--bg3);color:var(--text-2);font-size:11px;cursor:pointer">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      Metas
+    </button>
+    <button onclick="mnavGoMore('relatorios')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:none;background:var(--bg3);color:var(--text-2);font-size:11px;cursor:pointer">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Relatórios
+    </button>
+    <button onclick="mnavGoMore('categorias')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:none;background:var(--bg3);color:var(--text-2);font-size:11px;cursor:pointer">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 10h16M4 14h8M4 18h8"/><circle cx="17" cy="17" r="3"/></svg>
+      Categorias
+    </button>
+    <button onclick="mnavGoMore('notas')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:none;background:var(--bg3);color:var(--text-2);font-size:11px;cursor:pointer">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Notas
+    </button>
+  </div>
+</div>
 <nav class="mobile-nav" id="mobileNav">
   <button class="mobile-nav-item active" id="mnav-dashboard" onclick="mnavGo('dashboard',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -2477,13 +2598,13 @@ document.addEventListener('DOMContentLoaded', function() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" fill="rgba(201,168,76,0.15)" stroke="#C9A84C"/><line x1="12" y1="8" x2="12" y2="16" stroke="#C9A84C" stroke-width="2.5"/><line x1="8" y1="12" x2="16" y2="12" stroke="#C9A84C" stroke-width="2.5"/></svg>
     Novo
   </button>
-  <button class="mobile-nav-item" id="mnav-metas" onclick="mnavGo('metas',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-    Metas
+  <button class="mobile-nav-item" id="mnav-gastosfixos" onclick="mnavGo('gastosfixos',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/><line x1="14" y1="15" x2="18" y2="15"/></svg>
+    Gastos Fixos
   </button>
-  <button class="mobile-nav-item" id="mnav-relatorios" onclick="mnavGo('relatorios',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    Relatórios
+  <button class="mobile-nav-item" id="mnav-mais" onclick="toggleMobileMore(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></svg>
+    Mais
   </button>
 </nav>
 
