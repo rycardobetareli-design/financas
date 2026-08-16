@@ -56,6 +56,12 @@
     body, .sidebar, .card, .nav-item, .tx-item, .btn, .form-input, .goal-card, .insight, .month-pill, .tab, .summary-card { transition:none !important; }
   }
   body { font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  /* PROTEÇÃO GLOBAL CONTRA OVERFLOW */
+  img, canvas, select, input, textarea, table { max-width:100%; }
+  html, body { width:100%; }
+  img, canvas, video, table, select, input, textarea, svg { max-width:100% !important; }
+  select, input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea { width:100%; }
+  select.form-input, input.form-input { box-sizing:border-box; }
   body::before { content:''; position:fixed; inset:0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:9999; opacity:0.4; transition:opacity 0.4s ease; }
   body::after { content:''; position:fixed; top:-30vh; left:50%; transform:translateX(-50%); width:80vw; height:60vh; background: radial-gradient(ellipse, rgba(201,168,76,0.05) 0%, transparent 70%); pointer-events:none; z-index:0; transition:background 0.4s ease; }
   .sidebar { position:fixed; left:0; top:0; bottom:0; width:240px; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:100; padding:0; }
@@ -186,7 +192,7 @@
   .insight-title { font-size:13px; font-weight:600; color:var(--gold); margin-bottom:3px; }
   .insight-desc { font-size:12px; color:var(--text-2); line-height:1.5; }
   .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); z-index:1000; display:none; align-items:center; justify-content:center; animation:fadeIn 0.2s ease; }
-  .modal-overlay.open { display:flex; }
+  .modal-overlay.open { display:flex !important; opacity:1 !important; }
   .modal { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:36px; width:480px; max-width:90vw; position:relative; animation:slideUp 0.3s cubic-bezier(.16,1,.3,1); }
   .modal-title { font-size:22px; font-weight:bold; margin-bottom:6px; }
   .modal-sub { font-size:13px; color:var(--text-2); margin-bottom:28px; }
@@ -237,7 +243,7 @@
   .empty { text-align:center; padding:40px; color:var(--text-3); font-size:13px; }
   .badge { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:var(--gold); color:var(--bg); font-size:10px; font-weight:700; margin-left:6px; }
   .btn-dropdown { position:relative; }
-  .btn-dropdown-menu { position:fixed; background:var(--bg2); border:1px solid var(--border); border-radius:12px; min-width:210px; z-index:9998; box-shadow:0 12px 40px rgba(0,0,0,0.7); overflow:hidden; display:none; flex-direction:column; animation:ddFadeIn 0.15s ease forwards; }
+  .btn-dropdown-menu { position:fixed; background:var(--bg2); border:1px solid var(--border); border-radius:12px; min-width:210px; max-width:calc(100vw - 16px); z-index:9998; box-shadow:0 12px 40px rgba(0,0,0,0.7); overflow:hidden; display:none; flex-direction:column; animation:ddFadeIn 0.15s ease forwards; }
   @keyframes ddFadeIn { from { opacity:0; } to { opacity:1; } }
   .btn-dropdown-menu.dd-open { display:flex; }
   .btn-dropdown-item { display:flex; align-items:center; gap:10px; padding:11px 16px; font-size:12.5px; color:var(--text-2); cursor:pointer; transition:background 0.15s; border:none; background:transparent; text-align:left; width:100%; }
@@ -311,6 +317,7 @@
     .sidebar { transform:translateX(-100%); transition:transform 0.28s cubic-bezier(.4,0,.2,1); z-index:1000; }
     .main { margin-left:0; padding:16px 14px 80px; }
     .summary-grid { grid-template-columns:1fr 1fr !important; gap:10px; }
+    .card-value { font-size:20px !important; line-height:1.1 !important; }
     .content-grid { grid-template-columns:1fr !important; }
     .content-grid-3 { grid-template-columns:1fr !important; }
     .page-header { flex-direction:column; align-items:flex-start; gap:12px; margin-bottom:20px; }
@@ -328,7 +335,32 @@
     .form-full { grid-column:1 !important; }
     body.mobile-open .mobile-toggle-btn { opacity:0; pointer-events:none; }
   }
-  @media(max-width:400px) { .summary-grid { grid-template-columns:1fr !important; } .page-title { font-size:20px; } .main { padding:12px 10px 80px; } }
+  @media(max-width:400px) { .summary-grid { grid-template-columns:1fr !important; } .page-title { font-size:20px; } .main { padding:12px 10px 80px; }
+    .card-value { font-size:18px !important; }
+    .summary-card { padding:12px !important; }
+    .card-label { font-size:10px !important; }
+    /* Scroll-to-top não sobrepõe mobile nav */
+    #scrollTopBtn { bottom:max(92px, calc(80px + env(safe-area-inset-bottom))) !important; right:12px !important; width:36px !important; height:36px !important; }
+    /* Page-header: garantir que título e ações não estourem */
+    .page-header { margin-bottom:16px !important; }
+    .page-title { word-break:break-word; hyphens:auto; }
+    /* Transação: empilhar em telas muito pequenas para não estourar */
+    .tx-item { flex-wrap:wrap; gap:6px !important; }
+    .tx-drag-handle { display:none !important; }
+    .tx-icon { order:1; }
+    .tx-info { order:2; flex:1; min-width:0; }
+    .tx-amount { order:3; white-space:nowrap; }
+    .tx-cat { order:4; font-size:9px !important; padding:2px 5px !important; }
+    .tx-edit { order:5; opacity:1 !important; }
+    .tx-delete { order:6; opacity:1 !important; }
+    /* Page actions: botões menores */
+    .page-actions .btn { font-size:10.5px !important; padding:6px 10px !important; }
+    .page-actions .month-pill { font-size:10.5px !important; padding:6px 10px !important; }
+    .page-actions .btn-gold { white-space:normal !important; }
+    /* Mobile nav items maiores para toque */
+    .mobile-nav-item { font-size:9.5px; padding:8px 2px; }
+    .mobile-nav-item svg { width:22px; height:22px; }
+  }
 
   /* ══ PWA / MOBILE EXTRA ════════════════════════════════════ */
 
@@ -357,7 +389,7 @@
   /* Fix donut chart on mobile */
   @media(max-width:768px) {
     /* Show bottom nav, hide FAB */
-    .mobile-nav { display: grid; }
+    .mobile-nav { display: grid !important; grid-template-columns: repeat(5, 1fr); }
     .mobile-toggle-btn { display: none !important; }
 
     /* Sidebar still works via overlay swipe */
@@ -397,9 +429,24 @@
 
     /* Fix overflow on charts */
     .chart-wrap { overflow: hidden; }
+    /* Notes table: scroll horizontal dentro do container */
+    div[style*="overflow-x:auto"] { overflow-x:auto !important; -webkit-overflow-scrolling:touch; }
+    .notes-table { min-width:500px; }
+    /* Goal emoji modal */
+    .goal-emoji-modal { width:100% !important; max-width:95vw !important; }
 
     /* Goals grid */
     .content-grid-3 { grid-template-columns: 1fr !important; }
+    /* Fix inline style widths on mobile */
+    div[style*="width:320px"], div[style*="width: 320px"] { width: 100% !important; }
+    div[style*="width:340px"], div[style*="width: 340px"] { width: 100% !important; }
+    /* Import modal: col-map-row empilha em mobile */
+    .col-map-row { flex-direction:column !important; gap:4px !important; }
+    .col-map-label { width:100% !important; }
+    .col-map-desc { min-width:0 !important; width:100% !important; }
+    /* Calendar grid: garantir que os dias caibam */
+    #calendarGrid { gap:2px !important; }
+    #calendarGrid > div { font-size:10px !important; }
 
     /* Modais */
     .modal-overlay { align-items: flex-end !important; }
@@ -411,10 +458,14 @@
 
     /* ═══ GRÁFICO RECEITA VS DESPESA - RESPONSIVO ═══ */
     /* Grid do gráfico empilha verticalmente no mobile */
-    .rel-chart-grid { grid-template-columns: 1fr !important; }
+    .rel-chart-grid { grid-template-columns: 1fr !important; gap:14px !important; }
     /* Container do gráfico usa largura total */
     .bar-chart-container { height: 260px !important; }
     #barChart { width: 100% !important; }
+    /* Overrides para selects/inputs com largura inline */
+    #barChartYear, #fixoSearch { width: 100% !important; min-width: 0 !important; }
+    /* Relatorios: filtros empilham em telas pequenas */
+    #page-relatorios .card-header > div:last-child { width:100%; flex-direction:column !important; align-items:stretch !important; }
     /* ═══ OUTROS CHARTS ═══ */
     #histChart { height: 180px !important; }
     #forecastChart { width: 100% !important; }
@@ -1186,8 +1237,19 @@
         </div>
       </div>
     </div>
+    <div class="content-grid" style="margin-bottom:20px">
+      <div class="card">
+        <div class="card-header" style="flex-direction:column;align-items:flex-start;gap:12px;margin-bottom:0">
+          <span class="card-title">📊 Gastos Mensais por Categoria</span>
+          <div style="display:flex;gap:10px;align-items:center;width:100%;flex-wrap:wrap">
+            <select id="catChartMonth" onchange="initCatChart()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px;cursor:pointer;font-weight:500;transition:all 0.2s;flex:1;min-width:120px"></select>
+            <span id="catChartTotal" style="font-size:12px;color:var(--text-3);font-weight:500"></span>
+          </div>
+        </div>
+        <div style="height:300px;margin-top:16px"><canvas id="catChart"></canvas></div>
+      </div>
+    </div>
   </div>
-
   <!-- CATEGORIAS -->
   <div id="page-categorias" style="display:none">
     <div class="page-header">
@@ -1721,8 +1783,8 @@ function fmtCompact(v){if(v>=1000)return'R$ '+(v/1000).toFixed(1).replace('.',',
 
 // ═══ IMPORTADOR DE EXTRATO BANCÁRIO ═══
 let _parsedBankTxs=[];
-function openBankImportModal(){document.getElementById('bankImportText').value='';document.getElementById('bankImportPreview').style.display='none';_parsedBankTxs=[];document.getElementById('bankImportOverlay').classList.add('open');}
-function closeBankImportModal(){document.getElementById('bankImportOverlay').classList.remove('open');}
+function openBankImportModal(){document.getElementById('bankImportText').value='';document.getElementById('bankImportPreview').style.display='none';_parsedBankTxs=[];const ov=document.getElementById('bankImportOverlay');if(ov){ov.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;display:flex !important;align-items:center;justify-content:center;z-index:100001;opacity:1';ov.classList.add('open');window.scrollTo({top:0,behavior:'smooth'});showToast('🏦 Importar extrato bancário');}else{showToast('❌ Erro ao abrir modal.',true);console.error('bankImportOverlay not found');}}
+function closeBankImportModal(){const ov=document.getElementById('bankImportOverlay');if(ov){ov.classList.remove('open');ov.style.display='';}}
 function parseBankStatement(){const text=document.getElementById('bankImportText').value.trim();if(!text){showToast('⚠️ Cole o texto do extrato primeiro.',true);return;}
 _parsedBankTxs=[];
 const lines=text.split('\n').map(l=>l.trim()).filter(l=>l.length>3);
@@ -2219,7 +2281,7 @@ function renderRelatorios(){
   document.getElementById('repSavingsLabel').className='card-change '+sc;
   document.getElementById('repSavingsLabel').textContent=repSavings>=30?'Ótima poupança!':repSavings>0?'do período':'Sem receitas';
   document.getElementById('repPeriodLabel').textContent=MONTHS_SHORT[filterMonth-1]+' '+filterYear;
-  initBarChart();initRepDonut();initCatRanking();
+  initBarChart();initRepDonut();initCatRanking();initCatChart();
 }
 
 function resetBarChartYear(){const sel=document.getElementById('barChartYear');if(sel){sel.value='';}initBarChart();renderRelatorios();}
@@ -2316,6 +2378,139 @@ function initBarChart(){
   });
 }
 
+// ═══ GRÁFICO INTERATIVO: GASTOS MENSAIS POR CATEGORIA ═══
+let catChartInst=null;
+function initCatChart(){
+  const canvas=document.getElementById('catChart');if(!canvas)return;
+  const monthSel=document.getElementById('catChartMonth');
+  // Preencher seletor de meses
+  if(monthSel){
+    const months=[...new Set(transactions.map(t=>{
+      if(!t.date)return null;
+      const d=new Date(t.date);
+      if(isNaN(d))return null;
+      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    }).filter(Boolean))].sort((a,b)=>b.localeCompare(a));
+    if(!monthSel.options.length||monthSel.dataset.filled!=='1'){
+      monthSel.innerHTML=months.map(m=>{
+        const[y,mo]=m.split('-');
+        return `<option value="${m}">${MONTHS_SHORT[parseInt(mo)-1]} ${y}</option>`;
+      }).join('');
+      monthSel.dataset.filled='1';
+      // Default: mês atual
+      const now=new Date();
+      const currentMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+      if(months.includes(currentMonth)){
+        monthSel.value=currentMonth;
+      }else if(!monthSel.value&&months.length){
+        monthSel.value=months[0];
+      }
+    }
+  }
+  const selMonth=monthSel?monthSel.value:null;
+  // Filtrar despesas do mês selecionado e agrupar por categoria
+  const catTotals={};
+  let totalExpense=0;
+  transactions.forEach(t=>{
+    if(t.type!=='expense'||!t.date)return;
+    const d=new Date(t.date);
+    const mStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    if(selMonth&&mStr!==selMonth)return;
+    const cat=t.cat||'Sem categoria';
+    catTotals[cat]=(catTotals[cat]||0)+Math.abs(t.value);
+    totalExpense+=Math.abs(t.value);
+  });
+  // Ordenar por valor (maior primeiro)
+  const sorted=Object.entries(catTotals).sort((a,b)=>b[1]-a[1]);
+  const labels=sorted.map(([cat])=>cat);
+  const data=sorted.map(([,val])=>val);
+  // Cores das categorias
+  const catColors=sorted.map(([cat])=>{
+    const c=getAllCats().find(c2=>c2.name===cat);
+    if(c&&c.color)return c.color;
+    return '#C9A84C';
+  });
+  // Atualizar total
+  const totalEl=document.getElementById('catChartTotal');
+  if(totalEl)totalEl.textContent=fmt(totalExpense);
+  const ctx=canvas.getContext('2d');
+  if(catChartInst)catChartInst.destroy();
+  if(sorted.length===0){
+    // Sem dados
+    const fontSize=window.innerWidth<=768?14:16;
+    const textColor=document.body.classList.contains('theme-light')?'#666':'#8A8F96';
+    catChartInst=new Chart(ctx,{
+      type:'bar',
+      data:{labels:['Sem dados'],datasets:[{data:[1],backgroundColor:'transparent',borderColor:'transparent'}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{enabled:false}},
+        scales:{x:{display:false},y:{display:false}}
+      }
+    });
+    // Mostrar texto
+    ctx.save();
+    ctx.font=fontSize+'px sans-serif';
+    ctx.fillStyle=textColor;
+    ctx.textAlign='center';
+    ctx.fillText('Nenhuma despesa neste mês',canvas.width/2,canvas.height/2);
+    ctx.restore();
+    return;
+  }
+  catChartInst=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{label:'Gasto',data,backgroundColor:catColors,borderRadius:8,borderSkipped:false,maxBarThickness:36}]},
+    options:{
+      indexAxis:'y',
+      responsive:true,
+      maintainAspectRatio:false,
+      layout:{padding:{top:4,left:4,right:8,bottom:4}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          enabled:true,
+          backgroundColor:'#0E1318',
+          borderColor:'rgba(201,168,76,0.4)',
+          borderWidth:1.5,
+          titleColor:'#F0EDE6',
+          bodyColor:'#8A8F96',
+          padding:12,
+          cornerRadius:10,
+          titleFont:{size:13,weight:'600'},
+          bodyFont:{size:12},
+          callbacks:{
+            title:function(items){return '🏷️ '+items[0].label;},
+            label:function(c){
+              const pct=totalExpense>0?((c.parsed.x/totalExpense)*100).toFixed(1):'0';
+              return ' '+fmt(c.parsed.x)+' ('+pct.replace('.',',')+'% do total)';
+            }
+          }
+        }
+      },
+      scales:{
+        x:{
+          grid:{color:'rgba(255,255,255,0.06)',drawBorder:false},
+          ticks:{
+            color:'#8A8F96',
+            font:{size:window.innerWidth<=768?10:12},
+            callback:function(v){return v>=1000000?'R$'+(v/1000000).toFixed(1)+'M':v>=1000?'R$'+(v/1000).toFixed(0)+'k':'R$'+Math.round(v);},
+            padding:8
+          },
+          beginAtZero:true
+        },
+        y:{
+          grid:{display:false,drawBorder:false},
+          ticks:{
+            color:document.body.classList.contains('theme-light')?'#333':'#E0DDD6',
+            font:{size:window.innerWidth<=768?10:13,weight:'600'},
+            padding:4
+          }
+        }
+      },
+      animation:{duration:400,easing:'easeOutQuart'}
+    }
+  });
+}
+
 function initRepDonut(){
   const canvas=document.getElementById('repDonut');if(!canvas)return;
   const filtered=getFilteredTransactions();const cats={};
@@ -2372,7 +2567,7 @@ let _filterTimer=null;function filterTx(val){txSearch=val.toLowerCase();clearTim
 
 // TX DROPDOWN
 let _ddPortalMenu=null,_ddPortalOpen=false;
-function toggleTxDropdown(){const btn=document.getElementById('txActionsBtn');if(!btn)return;if(_ddPortalOpen){_closeDdPortal();return;}const dd=document.getElementById('txActionsDropdown');const menu=dd&&dd.querySelector('.btn-dropdown-menu');if(!menu)return;if(!_ddPortalMenu){_ddPortalMenu=menu;document.body.appendChild(_ddPortalMenu);}const rect=btn.getBoundingClientRect();_ddPortalMenu.style.top=(rect.bottom+8)+'px';_ddPortalMenu.style.right=(window.innerWidth-rect.right)+'px';_ddPortalMenu.style.left='auto';_ddPortalMenu.classList.add('dd-open');_ddPortalOpen=true;setTimeout(()=>{document.addEventListener('click',_ddOutsideClick);},0);}
+function toggleTxDropdown(){const btn=document.getElementById('txActionsBtn');if(!btn)return;if(_ddPortalOpen){_closeDdPortal();return;}const dd=document.getElementById('txActionsDropdown');const menu=dd&&dd.querySelector('.btn-dropdown-menu');if(!menu)return;if(!_ddPortalMenu){_ddPortalMenu=menu;document.body.appendChild(_ddPortalMenu);}const rect=btn.getBoundingClientRect();let topPos=rect.bottom+8;const menuH=_ddPortalMenu.scrollHeight||300;if(topPos+menuH>window.innerHeight)topPos=Math.max(8,rect.top-menuH-8);_ddPortalMenu.style.top=topPos+'px';_ddPortalMenu.style.right=(window.innerWidth-rect.right)+'px';_ddPortalMenu.style.left='auto';_ddPortalMenu.classList.add('dd-open');_ddPortalOpen=true;setTimeout(()=>{document.addEventListener('click',_ddOutsideClick);},0);}
 function _ddOutsideClick(e){if(_ddPortalMenu&&!_ddPortalMenu.contains(e.target)&&e.target.id!=='txActionsBtn'&&!document.getElementById('txActionsBtn')?.contains(e.target)){_closeDdPortal();}}
 function _closeDdPortal(){if(_ddPortalMenu)_ddPortalMenu.classList.remove('dd-open');_ddPortalOpen=false;document.removeEventListener('click',_ddOutsideClick);}
 function closeTxDropdown(){_closeDdPortal();}
@@ -2404,7 +2599,7 @@ if(!document._keyHandler){document._keyHandler=true;document.addEventListener('k
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
   if(e.key==='n'||e.key==='N'){if(document.getElementById('page-dashboard').style.display!=='none'||document.getElementById('page-transacoes').style.display!=='none')openModal();}
   if(e.key==='l'||e.key==='L'){if(e.shiftKey)logout();}
-  if(e.key==='Escape'){closeModal();closeFilterModal();if(document.getElementById('syncModal').classList.contains('open'))closeSyncModal();}
+  if(e.key==='Escape'){closeModal();closeFilterModal();if(document.getElementById('syncModal').classList.contains('open'))closeSyncModal();if(document.getElementById('bankImportOverlay').classList.contains('open'))closeBankImportModal();if(document.getElementById('installModalOverlay')&&document.getElementById('installModalOverlay').classList.contains('open'))closeInstallModal();}
 });}
 function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
 function closeModalOutside(e){if(e.target.id==='modalOverlay')closeModal();}
@@ -3327,6 +3522,7 @@ window.addEventListener('resize', function() {
     if(forecastChartInst) { try { forecastChartInst.resize(); } catch(e){} }
     if(fixoHistChartInst) { try { fixoHistChartInst.resize(); } catch(e){} }
     if(repDonutInst) { try { repDonutInst.resize(); } catch(e){} }
+    if(catChartInst) { try { catChartInst.resize(); } catch(e){} }
   }, 200);
 });
 
